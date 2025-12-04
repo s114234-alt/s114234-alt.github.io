@@ -4,30 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>水母合成器</title>
+    <title>水族箱</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1 class="title">🪼 水母合成器</h1>
+    <h1 class="title">🪼 水族箱展示</h1>
 
-    <div class="game-container">
-
-        <!-- 左側: 投放按鈕/資訊 -->
-        <div class="side-panel">
-            <button id="spawnJelly">投入水母</button>
-            <p>水母數量：<span id="jellyCount">0</span></p>
-            <p>成長數量：<span id="mergeCount">0</span></p>
-        </div>
-
-        <!-- 水族箱 -->
-        <div id="aquarium">
-            <div id="water-level"></div>
-        </div>
-
+    <div id="aquarium">
+        <div id="water"></div>
     </div>
 
-    <!-- 等等才用 -->
-    <script src="script.js"></script>
 </body>
 </html>
+body {
+    margin: 0;
+    text-align: center;
+    background: linear-gradient(#7bc5ff, #005a9c);
+    font-family: "Microsoft JhengHei";
+    color: white;
+}
+
+.title {
+    margin-top: 25px;
+    letter-spacing: 3px;
+}
+
+/* 水族箱外框 */
+#aquarium {
+    width: 500px;
+    height: 600px;
+    background: rgba(255,255,255,0.12);
+    margin: 30px auto;
+    border-radius: 20px;
+    border: 4px solid rgba(255,255,255,0.6);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0,0,0,0.4);
+}
+
+/* 水層 */
+#water {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 350px;
+    background: rgba(0, 140, 255, 0.45);
+    backdrop-filter: blur(3px);
+    animation: waterMove 5s infinite ease-in-out;
+}
+
+/* 水面動態效果 */
+@keyframes waterMove {
+    0%   {height: 345px;}
+    50%  {height: 360px;}
+    100% {height: 345px;}
+}
