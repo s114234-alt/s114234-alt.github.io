@@ -1,78 +1,33 @@
-body {
-    margin: 0;
-    font-family: "Microsoft JhengHei", sans-serif;
-    background: linear-gradient(#7cc9ff, #003e6e);
-    text-align: center;
-    color: white;
-}
 
-.title {
-    margin-top: 20px;
-    letter-spacing: 3px;
-}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水母合成器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-/* layout */
-.game-container {
-    display: flex;
-    justify-content: center;
-    gap: 25px;
-    margin-top: 30px;
-}
+    <h1 class="title">🪼 水母合成器</h1>
 
-/* 左側資訊面板 */
-.side-panel {
-    width: 150px;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 15px;
-    border-radius: 12px;
-}
+    <div class="game-container">
 
-#spawnJelly {
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border: none;
-    background-color: #01b8ff;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 8px;
-}
-#spawnJelly:hover {
-    background-color: #0088c7;
-}
+        <!-- 左側: 投放按鈕/資訊 -->
+        <div class="side-panel">
+            <button id="spawnJelly">投入水母</button>
+            <p>水母數量：<span id="jellyCount">0</span></p>
+            <p>成長數量：<span id="mergeCount">0</span></p>
+        </div>
 
-/* 水族箱 */
-#aquarium {
-    width: 500px;
-    height: 600px;
-    background: rgba(255,255,255,0.1);
-    border: 4px solid rgba(255,255,255,0.5);
-    border-radius: 15px;
-    position: relative;
-    overflow: hidden;
-}
+        <!-- 水族箱 -->
+        <div id="aquarium">
+            <div id="water-level"></div>
+        </div>
 
-/* 水面高度條 */
-#water-level {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 120px; 
-    background: rgba(0,140,255,0.35);
-    transition: height 0.5s;
-}
+    </div>
 
-/* 每隻水母（之後靠 JS 生成）*/
-.jelly {
-    width: 60px;
-    height: 60px;
-    position: absolute;
-    border-radius: 50%;
-    background-size: cover;
-    background-position: center;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-.jelly:hover {
-    transform: scale(1.1);
-}
+    <!-- 等等才用 -->
+    <script src="script.js"></script>
+</body>
+</html>
