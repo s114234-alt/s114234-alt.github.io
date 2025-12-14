@@ -27,6 +27,11 @@
     }
 
     /* 遊戲規則區塊 */
+    #score {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
     #rules {
       width: 420px;
       margin-top: 10px;
@@ -40,7 +45,7 @@
 <body>
 
   <h1>水族箱水母合成遊戲</h1>
-  <div id="score">分數：0 ｜
+  <div id="score">分數：0 ｜ 最高分：0</div>
 
   <!-- Canvas：水族箱 -->
   <canvas id="tank" width="400" height="500"></canvas>
@@ -64,6 +69,13 @@
 
     /* 可用的水母形狀 */
     const shapes = ['circle', 'square', 'triangle'];
+
+    // 不同形狀的分數倍率
+    const shapeScoreMultiplier = {
+      circle: 1,    // 圓形：基本分
+      square: 1.5,  // 方形：中等
+      triangle: 2   // 三角形：最高
+    };
 
     let jellyfish = [];
     let score = 0;        // 目前分數
@@ -134,8 +146,15 @@
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < a.size + b.size && a.shape === b.shape) {
-            a.size += 6;           // 合併後變大
+            a.size += 6;                 // 合併後變大
             jellyfish.splice(j, 1);
+
+            // === 分數計算 ===
+            // 根據形狀給不同分數倍率
+            const
+            if (score > bestScore) bestScore = score;
+            document.getElementById('score').innerText = `分數：${score} ｜ 最高分：${bestScore}`;
+
             isDropping = false;
             return;
           }
@@ -192,6 +211,8 @@
       const stacked = jellyfish.filter(j => !j.falling);
       if (stacked.length >= maxStack) {
         alert('水族箱滿了！遊戲重新開始');
+        score = 0;
+        document.getElementById('score').innerText = `分數：${score} ｜ 最高分：${bestScore}`;
         jellyfish = [];
         nextJellyfish = createJellyfish(canvas.width / 2, 20);
         isDropping = false;
@@ -204,4 +225,3 @@
   </script>
 </body>
 </html>
-
