@@ -122,12 +122,16 @@
     function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      jellyfish.forEach((j, index) => {
-        j.y += j.speed;
-        if (j.y + j.size >= canvas.height) {
-          bottomCount++;
-          jellyfish.splice(index, 1);
-          isDropping = false;
+      jellyfish.forEach(j => {
+        if (j.falling) {
+          j.y += j.speed;
+
+          // 碰到底部就停止（堆積）
+          if (j.y + j.size >= canvas.height) {
+            j.y = canvas.height - j.size;
+            j.falling = false;
+            isDropping = false;
+          }
         }
         drawJellyfish(j);
       });
@@ -139,15 +143,17 @@
 
       checkCollision();
 
-      if (bottomCount >= maxBottom) {
+      // 判斷水母是否堆滿
+      const stacked = jellyfish.filter(j => !j.falling);
+      if (stacked.length >= maxBottom) {
         alert('水族箱滿了！遊戲重新開始');
         jellyfish = [];
-        bottomCount = 0;
         nextJellyfish = createJellyfish(canvas.width / 2, 20);
         isDropping = false;
       }
 
       requestAnimationFrame(update);
+    }
     }
 
     update();
