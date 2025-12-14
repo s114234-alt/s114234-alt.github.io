@@ -112,6 +112,28 @@
         ctx.roundRect(j.x - j.size, j.y - j.size, j.size * 2, j.size * 2, 6);
       } else {
         ctx.moveTo(j.x, j.y - j.size);
+        ctx.lineTo(j.x - j.size, j.y + j.size);
+        ctx.lineTo(j.x + j.size, j.y + j.size);
+        ctx.closePath();
+      }
+      ctx.fill();
+
+      // 眼睛
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(j.x - j.size / 3, j.y - j.size / 4, 2, 0, Math.PI * 2);
+      ctx.arc(j.x + j.size / 3, j.y - j.size / 4, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 觸手（簡單線條）
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.moveTo(j.x + i * 4, j.y + j.size);
+        ctx.lineTo(j.x + i * 4, j.y + j.size + 8);
+        ctx.stroke();
+      }
+    }
     }
 
     /* 滑鼠移動：控制水母左右 */
@@ -133,6 +155,7 @@
 
     /* 碰撞後合併水母 */
     function checkMerge() {
+      let mergedEffect = null;
       for (let i = 0; i < jellyfish.length; i++) {
         for (let j = i + 1; j < jellyfish.length; j++) {
           const a = jellyfish[i];
@@ -143,6 +166,7 @@
 
           if (dist < a.size + b.size && a.shape === b.shape) {
             a.size += 6;
+            // 合併特效資料
             jellyfish.splice(j, 1);
 
             const m = shapeScoreMultiplier[a.shape];
