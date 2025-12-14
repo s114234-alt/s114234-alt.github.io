@@ -1,106 +1,156 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<title>水族箱水母遊戲</title>
-<style>
-/* ===== CSS：畫面外觀設定 ===== */
-body {
-font-family: Arial, sans-serif;
-background: #e6f7ff;
-display: flex;
-flex-direction: column;
-align-items: center;
-}
+  <meta charset="UTF-8" />
+  <title>水族箱水母遊戲（操作版）</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e6f7ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
+    h1 { margin: 10px; }
 
-h1 { margin: 10px; }
+    #tank {
+      border: 4px solid #004466;
+      background: linear-gradient(#b3ecff, #006699);
+    }
 
-
-/* 水族箱容器 */
-#tank {
-position: relative;
-width: 400px;
-height: 500px;
-background: linear-gradient(#b3ecff, #006699);
-border: 4px solid #004466;
-overflow: hidden;
-}
-
-
-/* 底部規則說明 */
-#rules {
-width: 400px;
-background: #ffffff;
-border: 1px solid #ccc;
-padding: 10px;
-margin-top: 10px;
-font-size: 14px;
-}
-</style>
+    #rules {
+      width: 400px;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-<h1>水族箱水母遊戲</h1>
+  <h1>水族箱水母遊戲</h1>
 
+  <canvas id="tank" width="400" height="500"></canvas>
 
-<!-- Canvas 用來畫水母 -->
-<canvas id="tank" width="400" height="500"></canvas>
+  <div id="rules">
+    <strong>遊戲規則：</strong>
+    <ul>
+      <li>移動滑鼠決定水母掉落位置。</li>
+      <li>點擊滑鼠，水母會從水面掉下。</li>
+      <li>相同形狀水母碰撞會合併成更大的水母。</li>
+      <li>無法合併的水母會堆積，塞滿水族箱即結束。</li>
+    </ul>
+  </div>
 
+  <script>
+    const canvas = document.getElementById('tank');
+    const ctx = canvas.getContext('2d');
 
-<!-- 遊戲規則 -->
-<div id="rules">
-<strong>遊戲規則：</strong>
-<ul>
-<li>水母會從水面慢慢往下掉。</li>
-<li>相同形狀的水母碰撞後會合併成更大的水母。</li>
-<li>如果掉下來的水母沒有找到相同形狀，會堆積在底部。</li>
-<li>當水母塞滿整個水族箱，遊戲會重新開始。</li>
-</ul>
-</div>
+    const shapes = ['circle', 'square', 'triangle'];
+    let jellyfish = [];
+    let bottomCount = 0;
+    const maxBottom = 6;
 
+    // 玩家即將放下的水母
+    let nextJellyfish = createJellyfish(canvas.width / 2, 20);
+    let isDropping = false;
 
-<script>
-// ===== JavaScript：遊戲邏輯 =====
+    function createJellyfish(x, y) {
+      return {
+        x,
+        y,
+        size: 15,
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
+        speed: 1.5
+      };
+    }
 
+    function drawJellyfish(j) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.beginPath();
+      if (j.shape === 'circle') {
+        ctx.arc(j.x, j.y, j.size, 0, Math.PI * 2);
+      } else if (j.shape === 'square') {
+        ctx.rect(j.x - j.size, j.y - j.size, j.size * 2, j.size * 2);
+      } else {
+        ctx.moveTo(j.x, j.y - j.size);
+        ctx.lineTo(j.x - j.size, j.y + j.size);
+        ctx.lineTo(j.x + j.size, j.y + j.size);
+        ctx.closePath();
+      }
+      ctx.fill();
+    }
 
-const canvas = document.getElementById('tank');
-const ctx = canvas.getContext('2d');
+    // 滑鼠移動：控制水母左右位置
+    canvas.addEventListener('mousemove', e => {
+      if (!isDropping) {
+        const rect = canvas.getBoundingClientRect();
+        nextJellyfish.x = e.clientX - rect.left;
+      }
+    });
 
+    // 點擊：放下水母
+    canvas.addEventListener('click', () => {
+      if (!isDropping) {
+        jellyfish.push(nextJellyfish);
+        nextJellyfish = createJellyfish(nextJellyfish.x, 20);
+        isDropping = true;
+      }
+    });
 
-const shapes = ['circle', 'square', 'triangle'];
-let jellyfish = [];
-let bottomCount = 0; // 底部堆積數量
-const maxBottom = 6; // 超過就 Game Over
+    function checkCollision() {
+      for (let i = 0; i < jellyfish.length; i++) {
+        for (let j = i + 1; j < jellyfish.length; j++) {
+          const a = jellyfish[i];
+          const b = jellyfish[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
+          if (dist < a.size + b.size && a.shape === b.shape) {
+            a.size += 5;
+            jellyfish.splice(j, 1);
+            isDropping = false;
+            return;
+          }
+        }
+      }
+    }
 
-// 產生新的水母
-function spawnJellyfish() {
-const shape = shapes[Math.floor(Math.random() * shapes.length)];
-jellyfish.push({
-x: Math.random() * 360 + 20,
-y: 0,
-size: 15,
-shape: shape,
-speed: 1
-});
-}
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      jellyfish.forEach((j, index) => {
+        j.y += j.speed;
+        if (j.y + j.size >= canvas.height) {
+          bottomCount++;
+          jellyfish.splice(index, 1);
+          isDropping = false;
+        }
+        drawJellyfish(j);
+      });
 
-// 畫水母
-function drawJellyfish(j) {
-ctx.fillStyle = 'rgba(255,255,255,0.8)';
-ctx.beginPath();
+      // 畫出「準備掉落」的水母
+      if (!isDropping) {
+        drawJellyfish(nextJellyfish);
+      }
 
+      checkCollision();
 
-if (j.shape === 'circle') {
-ctx.arc(j.x, j.y, j.size, 0, Math.PI * 2);
-} else if (j.shape === 'square') {
-ctx.rect(j.x - j.size, j.y - j.size, j.size * 2, j.size * 2);
-} else if (j.shape === 'triangle') {
-ctx.moveTo(j.x, j.y - j.size);
-ctx.lineTo(j.x - j.size, j.y + j.size);
-ctx.lineTo(j.x + j.size, j.y + j.size);
-ctx.closePath();
-}
-ctx.fill();
+      if (bottomCount >= maxBottom) {
+        alert('水族箱滿了！遊戲重新開始');
+        jellyfish = [];
+        bottomCount = 0;
+        nextJellyfish = createJellyfish(canvas.width / 2, 20);
+        isDropping = false;
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
 </html>
