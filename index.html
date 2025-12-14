@@ -40,6 +40,7 @@
 <body>
 
   <h1>水族箱水母合成遊戲</h1>
+  <div id="score">分數：0 ｜
 
   <!-- Canvas：水族箱 -->
   <canvas id="tank" width="400" height="500"></canvas>
@@ -65,6 +66,8 @@
     const shapes = ['circle', 'square', 'triangle'];
 
     let jellyfish = [];
+    let score = 0;        // 目前分數
+    let bestScore = 0;   // 最高分
     const maxStack = 8;      // 堆積上限
     let isDropping = false;
 
@@ -146,6 +149,37 @@
 
       jellyfish.forEach(j => {
         // 左右漂浮（像在水裡）
+        j.driftPhase += 0.03;
+        j.x += Math.sin(j.driftPhase) * j.driftAmp;
+        // 邊界限制，避免漂出水族箱
+        j.x = Math.max(j.size, Math.min(canvas.width - j.size, j.x));
+
+        if (j.falling) {
+          j.y += j.speed;
+
+          // 撞到已堆積水母
+          jellyfish.forEach(other => {
+            if (j !== other && !other.falling) {
+              const dx = j.x - other.x;
+              const dy = j.y - other.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < j.size + other.size && j.y < other.y) {
+                j.y = other.y - other.size - j.size;
+                j.falling = false;
+                isDropping = false;
+              }
+            }
+          });
+
+          // 撞到底部
+          if (j.y + j.size >= canvas.height) {
+            j.y = canvas.height - j.size;
+            j.falling = false;
+            isDropping = false;
+          }
+        }
+        drawJellyfish(j);
+      });
 
       // 畫出準備中的水母
       if (!isDropping) {
@@ -170,3 +204,4 @@
   </script>
 </body>
 </html>
+
