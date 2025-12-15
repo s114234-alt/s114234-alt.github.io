@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>水族箱水母合併遊戲</title>
 
-  <!-- ===== CSS：頁面樣式 ===== -->
+  <!-- ===== CSS：外觀樣式 ===== -->
   <style>
     body {
       margin: 0;
@@ -19,13 +19,12 @@
       margin: 10px 0;
     }
 
-    /* 分數顯示 */
     #score {
       margin-bottom: 8px;
       font-size: 16px;
     }
 
-    /* 水族箱（600x600，天空藍漸層＋深色邊框） */
+    /* 水族箱：600x600，天空藍漸層＋深色邊框 */
     canvas {
       width: 600px;
       height: 600px;
@@ -33,7 +32,7 @@
       border: 6px solid #00334d;
     }
 
-    /* 規則區塊 */
+    /* 規則說明 */
     #rules {
       width: 600px;
       margin-top: 12px;
@@ -49,18 +48,18 @@
   <h1>水族箱水母合併遊戲</h1>
   <div id="score">分數：0</div>
 
-  <!-- Canvas：水族箱 -->
+  <!-- Canvas：水族箱本體 -->
   <canvas id="tank" width="600" height="600"></canvas>
 
-  <!-- 規則說明 -->
+  <!-- 規則區塊 -->
   <div id="rules">
     <strong>遊戲規則：</strong>
     <ul>
       <li>滑鼠左右移動可控制水面上的水母位置。</li>
-      <li>點擊滑鼠，水母會往下掉。</li>
-      <li>相同大小的水母碰撞後會合併成更大的水母，並發光。</li>
-      <li>無法合併的水母會在水族箱底部堆積。</li>
-      <li>水族箱被塞滿時，遊戲重新開始。</li>
+      <li>點擊滑鼠，水母會快速往下掉。</li>
+      <li>相同大小的水母碰撞後會合併成更大的水母並發光。</li>
+      <li>未合併的水母會在水族箱底部堆積。</li>
+      <li>當水族箱被塞滿時，遊戲會重新開始。</li>
     </ul>
   </div>
 
@@ -74,13 +73,16 @@
     let isDropping = false;
     const maxStack = 10;
 
-    /* 建立水母（只有大小不同） */
-    function createJellyfish(x, y, size = 20) {
+    /* 可隨機出現的水母大小 */
+    const sizes = [16, 22, 28];
+
+    /* 建立水母物件 */
+    function createJellyfish(x, y) {
       return {
         x,
         y,
-        size,
-        speed: 2,
+        size: sizes[Math.floor(Math.random() * sizes.length)],
+        speed: 4,          // 掉落速度（較快）
         falling: true,
         glow: 0
       };
@@ -88,12 +90,13 @@
 
     let nextJellyfish = createJellyfish(canvas.width / 2, 30);
 
-    /* 畫水母 */
+    /* 畫水母（圓形＋發光） */
     function drawJellyfish(j) {
       ctx.save();
+
       if (j.glow > 0) {
         ctx.shadowColor = 'rgba(255,255,200,0.9)';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         j.glow -= 0.1;
       }
 
@@ -121,7 +124,7 @@
       }
     });
 
-    /* 檢查合併 */
+    /* 檢查是否可以合併 */
     function checkMerge() {
       for (let i = 0; i < jellyfishList.length; i++) {
         for (let j = i + 1; j < jellyfishList.length; j++) {
@@ -144,7 +147,7 @@
       }
     }
 
-    /* 主迴圈 */
+    /* 主遊戲迴圈 */
     function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -152,7 +155,7 @@
         if (j.falling) {
           j.y += j.speed;
 
-          // 碰到底部
+          // 掉到底部
           if (j.y + j.size >= canvas.height) {
             j.y = canvas.height - j.size;
             j.falling = false;
