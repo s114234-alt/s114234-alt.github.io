@@ -20,9 +20,8 @@
     }
 
     #score {
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       font-size: 16px;
-    }
 
     /* 水族箱：600x600、粉紅漸層、深色邊框 */
     canvas {
@@ -47,6 +46,7 @@
 
   <h1>粉紅水族箱水母合併遊戲</h1>
   <div id="score">分數：0</div>
+  <div id="next">下一隻水母：</div>
 
   <!-- Canvas：水族箱本體 -->
   <canvas id="tank" width="600" height="600"></canvas>
@@ -57,4 +57,147 @@
     <ul>
       <li>滑鼠左右移動，可控制水面上的水母位置。</li>
       <li>每次會隨機出現不同大小的水母。</li>
-      <li>點擊滑鼠，水母會快速往下
+      <li>點擊滑鼠，水母會快速往下掉。</li>
+      <li>相同大小的水母碰撞後會合併成更大的水母並發光。</li>
+      <li>不同大小的水母會在水族箱底部堆疊。</li>
+      <li>水族箱被水母塞滿時，遊戲重新開始。</li>
+    </ul>
+  </div>
+
+  <!-- ================= JavaScript：遊戲邏輯 ================= -->
+  <script>
+    const canvas = document.getElementById('tank');
+    const ctx = canvas.getContext('2d');
+
+    let jellyfishList = [];
+    let score = 0;
+    let isDropping = false;
+    const maxHeight = 80; // 超過此高度就 Game Over
+
+    /* 可隨機出現的水母大小 */
+    const sizes = [16, 22, 28];
+
+    /* 建立一隻水母物件 */
+    function createJellyfish(x, y) {
+      return {
+        x,
+        y,
+        size: sizes[Math.floor(Math.random() * sizes.length)],
+        speed: 5,       // 掉落速度較快
+        falling: true,
+        glow: 0
+      };
+    }
+
+    let nextJellyfish = createJellyfish(canvas.width / 2, 30);
+
+    /* 畫水母（圓形＋發光） */
+    function drawJellyfish(j) {
+      ctx.save();
+
+      if (j.glow > 0) {
+        ctx.shadowColor = 'rgba(255,255,200,0.9)';
+        ctx.shadowBlur = 30;
+        j.glow -= 0.1;
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.beginPath();
+      ctx.arc(j.x, j.y, j.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    /* 滑鼠移動控制水母左右 */
+    canvas.addEventListener('mousemove', e => {
+      if (!isDropping) {
+        const rect = canvas.getBoundingClientRect();
+        nextJellyfish.x = e.clientX - rect.left;
+      }
+    });
+
+    /* 點擊放下水母 */
+    canvas.addEventListener('click', () => {
+      if (!isDropping) {
+        jellyfishList.push(nextJellyfish);
+        nextJellyfish = createJellyfish(nextJellyfish.x, 30);
+        isDropping = true;
+      }
+    });
+
+    /* 檢查是否可合併 */
+    function checkMerge() {
+      for (let i = 0; i < jellyfishList.length; i++) {
+        for (let j = i + 1; j < jellyfishList.length; j++) {
+          const a = jellyfishList[i];
+          const b = jellyfishList[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < a.size + b.size && a.size === b.size) {
+            a.size += 8;
+            a.glow = 1;
+            jellyfishList.splice(j, 1);
+            score += a.size;
+            document.getElementById('score').innerText = `分數：${score}`;
+            isDropping = false;
+            return;
+          }
+        }
+      }
+    }
+
+    /* 主遊戲迴圈 */
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      jellyfishList.forEach(j => {
+        if (j.falling) {
+          j.y += j.speed;
+
+          // 掉到底部或其他水母上方
+          jellyfishList.forEach(other => {
+            if (j !== other && !other.falling) {
+              const dx = j.x - other.x;
+              const dy = j.y - other.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < j.size + other.size && j.y < other.y) {
+                j.y = other.y - other.size - j.size;
+                j.falling = false;
+                isDropping = false;
+              }
+            }
+          });
+
+          if (j.y + j.size >= canvas.height) {
+            j.y = canvas.height - j.size;
+            j.falling = false;
+            isDropping = false;
+          }
+        }
+        drawJellyfish(j);
+      });
+
+      if (!isDropping) drawJellyfish(nextJellyfish);
+
+      checkMerge();
+
+      // Game Over：水母堆太高
+      const highest = Math.min(...jellyfishList.map(j => j.y - j.size));
+      if (highest < maxHeight) {
+        alert('水族箱滿了！遊戲重新開始');
+        jellyfishList = [];
+        score = 0;
+        document.getElementById('score').innerText = '分數：0';
+        nextJellyfish = createJellyfish(canvas.width / 2, 30);
+        isDropping = false;
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
+</html>
