@@ -3,24 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <title>水母合併水族箱</title>
+
   <style>
-    /* ===== 整體頁面 ===== */
+    /* =========================
+       1. 整個頁面基本設定
+    ========================= */
     body {
       background: #222;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
-      color: white;
       font-family: Arial, sans-serif;
     }
 
-    /* ===== 分數 ===== */
+    /* =========================
+       2. 分數顯示
+    ========================= */
     #score {
       margin: 10px;
       font-size: 20px;
     }
 
-    /* ===== 水族箱 ===== */
+    /* =========================
+       3. 水族箱設定
+    ========================= */
     #tank {
       width: 800px;
       height: 800px;
@@ -30,13 +37,14 @@
       background: linear-gradient(#87ceeb, #1e90ff);
     }
 
-    /* ===== 水母 ===== */
-    .jellyfish {
+    /* =========================
+       4. 水母樣式
+    ========================= */
+    .jelly {
       position: absolute;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.85);
       box-shadow: 0 0 10px rgba(255,255,255,0.8);
-      transition: box-shadow 0.3s;
     }
 
     /* 合併時發光 */
@@ -44,5 +52,196 @@
       box-shadow: 0 0 25px yellow;
     }
 
-    /* ===== 規則 ===== */
+    /* =========================
+       5. 規則區塊
+    ========================= */
     #rules {
+      width: 800px;
+      margin-top: 10px;
+      background: #111;
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 分數 -->
+  <div id="score">分數：0</div>
+
+  <!-- 水族箱 -->
+  <div id="tank"></div>
+
+  <!-- 規則 -->
+  <div id="rules">
+    規則說明：<br>
+    1. 滑鼠左右移動控制水母位置<br>
+    2. 相同大小水母碰撞會合併並加分<br>
+    3. 水母堆滿水族箱，遊戲重新開始
+  </div>
+
+  <script>
+    /* =========================
+       1. 取得畫面元素
+    ========================= */
+    const tank = document.getElementById("tank");
+    const scoreText = document.getElementById("score");
+
+    const TANK_WIDTH = 800;
+    const TANK_HEIGHT = 800;
+
+    let score = 0;
+    let currentJelly = null;
+    let settledJellies = [];
+
+    /* =========================
+       2. 水母大小設定
+    ========================= */
+    const sizes = [30, 50, 70];
+
+    /* =========================
+       3. 建立新水母
+    ========================= */
+    function createJelly() {
+      const size = sizes[Math.floor(Math.random() * sizes.length)];
+
+      const jelly = document.createElement("div");
+      jelly.className = "jelly";
+      jelly.dataset.size = size;
+
+      jelly.style.width = size + "px";
+      jelly.style.height = size + "px";
+      jelly.style.left = (TANK_WIDTH / 2 - size / 2) + "px";
+      jelly.style.top = "0px";
+
+      tank.appendChild(jelly);
+      currentJelly = jelly;
+    }
+
+    /* =========================
+       4. 滑鼠控制水母左右
+    ========================= */
+    tank.addEventListener("mousemove", e => {
+      if (!currentJelly) return;
+
+      const rect = tank.getBoundingClientRect();
+      let x = e.clientX - rect.left - currentJelly.offsetWidth / 2;
+
+      x = Math.max(0, Math.min(TANK_WIDTH - currentJelly.offsetWidth, x));
+      currentJelly.style.left = x + "px";
+    });
+
+    /* =========================
+       5. 水母下落動畫
+    ========================= */
+    function drop() {
+      if (!currentJelly) return;
+
+      let y = parseFloat(currentJelly.style.top);
+      y += 5; // 下落速度
+      currentJelly.style.top = y + "px";
+
+      // 碰到底部
+      if (y + currentJelly.offsetHeight >= TANK_HEIGHT) {
+        settle();
+        return;
+      }
+
+      // 碰到其他水母
+      for (let jelly of settledJellies) {
+        if (isCollide(currentJelly, jelly)) {
+          if (currentJelly.dataset.size === jelly.dataset.size) {
+            merge(jelly);
+          } else {
+            settle();
+          }
+          return;
+        }
+      }
+
+      requestAnimationFrame(drop);
+    }
+
+    /* =========================
+       6. 碰撞判斷
+    ========================= */
+    function isCollide(a, b) {
+      const ar = a.getBoundingClientRect();
+      const br = b.getBoundingClientRect();
+
+      return !(
+        ar.right < br.left ||
+        ar.left > br.right ||
+        ar.bottom < br.top ||
+        ar.top > br.bottom
+      );
+    }
+
+    /* =========================
+       7. 合併水母
+    ========================= */
+    function merge(target) {
+      const newSize = parseInt(target.dataset.size) + 20;
+
+      target.dataset.size = newSize;
+      target.style.width = newSize + "px";
+      target.style.height = newSize + "px";
+      target.classList.add("merge");
+
+      setTimeout(() => target.classList.remove("merge"), 300);
+
+      tank.removeChild(currentJelly);
+      currentJelly = null;
+
+      score += 10;
+      scoreText.textContent = "分數：" + score;
+
+      createJelly();
+      requestAnimationFrame(drop);
+    }
+
+    /* =========================
+       8. 水母固定堆疊
+    ========================= */
+    function settle() {
+      settledJellies.push(currentJelly);
+      currentJelly = null;
+
+      // 判斷是否塞滿
+      for (let jelly of settledJellies) {
+        if (parseFloat(jelly.style.top) < 40) {
+          alert("水族箱滿了！遊戲重新開始");
+          resetGame();
+          return;
+        }
+      }
+
+      createJelly();
+      requestAnimationFrame(drop);
+    }
+
+    /* =========================
+       9. 重置遊戲
+    ========================= */
+    function resetGame() {
+      settledJellies.forEach(j => tank.removeChild(j));
+      settledJellies = [];
+      score = 0;
+      scoreText.textContent = "分數：0";
+
+      createJelly();
+      requestAnimationFrame(drop);
+    }
+
+    /* =========================
+       10. 啟動遊戲
+    ========================= */
+    createJelly();
+    requestAnimationFrame(drop);
+  </script>
+
+</body>
+</html>
